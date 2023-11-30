@@ -7,13 +7,13 @@
 //! It aims to address certain issues observed working with the regular closures through `fn_traits` such as:
 //!
 //! * having to box closures without a good reason,
-//! * having to add a generic parameters to structs holding closures without a good reason,
+//! * having to add generic parameters to structs holding closures without a good reason,
 //! * impossibility (hopefully only for now) of returning a reference to the captured data.
 //!
 //!
 //! ## A. Motivation
 //!
-//! Here we present some of the issues and the suggested solution with `Closure` type.
+//! Some of the mentioned issues and suggested solution with `Closure` type are discussed here.
 //!
 //! ### A.1. `expected closure, found a different closure`
 //!
@@ -44,15 +44,15 @@
 //! = note: expected closure `[closure@src\motiv.rs:6:17: 6:25]`
 //!            found closure `[closure@src\motiv.rs:8:17: 8:25]`
 //!
-//! This is because **impl** in return position does not really allow generic returns. It allows us to return one concrete type that we cannot type, which is determined by the body of the function rather than the caller.
+//! Because **impl** in return position does not allow generic returns. It allows us to return one concrete type that we cannot type, which is determined by the body of the function rather than the caller.
 //!
 //! Let's break the closure to its components:
 //! * The captured data, say `Capture`. Here `Capture = i32`.
 //! * The non-capturing function; i.e., a function pointer `fn` transforming an `In` to an `Out`, with additional access to the `Capture`. We can type it down as `fn(&Capture, In) -> Out`. Here it is `fn(&i32, i32) -> i32`.
 //!
-//! *The choice on the `&Capture` is intentional due to `Fn` being our favorite among `Fn`, `FnOnce` and `FnMut`. In other words, we want to be able to call the closure many times and we don't want to mutate. If we want to consume, we can simply capture by value.*
+//! *The choice on the `&Capture` is intentional due to `Fn` being absolute favorite among `Fn`, `FnOnce` and `FnMut`. In other words, we want to be able to call the closure many times and we don't want to mutate. If we want to consume, we can simply capture by value; recall that the data and `fn` are separated.*
 //!
-//! If we consider the closure as the sum of these two components; or simply as the pair `(Capture, fn(&Capture, In) -> Out)`; it is clear that both if-else branches have the same type `(i32, fn(&i32, i32) -> i32)`, and hence, there is no reason to treat them as different types.
+//! If we consider the closure as the sum of these two components; or simply as the pair `(Capture, fn(&Capture, In) -> Out)`; it is clear that both if-else branches have the same type `(i32, fn(&i32, i32) -> i32)`, there is no reason to treat them as different types.
 //!
 //! This is exactly what the `Closure<Capture, In, Out>` struct does: it separates the captured data from the function pointer. Then, these functions become two different values of the same type, and hence, the following is valid.
 //!
@@ -84,9 +84,9 @@
 //! }
 //! ```
 //!
-//! The error message correctly says *no two closures, even if identical, have the same type*. But this is not a limitation for anonymous functions; they actually have the same type even if they are different as long as they don't capture the environment and have the same signature. `fn`s are cool.
+//! The error message correctly says *no two closures, even if identical, have the same type*. But this is not a limitation for anonymous functions; they actually have the same type even if they are different as long as they don't capture the environment and have the same signature. `fn`s are nice.
 //!
-//! The following is a little more realistic example where we are able to nicely define the type of the closure with `Closure`:
+//! The following is a little more realistic example where we are able to nicely define the type of the `Closure`:
 //!
 //! ```rust
 //! use orx_closure::*;
@@ -111,7 +111,7 @@
 //!
 //! #### Why not just `Box` it?
 //!
-//! It is true that additional direction solves most, but not all, of the problems mentioned here. For instance, the following code compiles and works just fine.
+//! It is true that additional indirection solves not all but most of the problems mentioned here. For instance, the following code compiles and works just fine.
 //!
 //! ```rust
 //! fn returns_closure(hmm: bool, y: i32) -> Box<dyn Fn(i32) -> i32> {
@@ -139,10 +139,11 @@
 //! * As mentioned above, we notice we have to use a trait object, so we go with `Box<dyn Fn(i32) -> i32>`.
 //! * As a first class citizen, we pass this function to another function as one of its arguments that is of generic type `F: Fn(i32) -> i32`.
 //! * Everything works fine.
-//! * At some point, we are required to easily and cheaply `Clone` ahd share the closure. Therefore, we change the indirection to be `Rc<dyn Fn(i32) -> i32>`.
+//! * At some point, we are required to easily and cheaply `Clone` and share the closure. Therefore, we change the indirection to be `Rc<dyn Fn(i32) -> i32>`.
 //! * And suddenly, we cannot pass this closure to the other function since **`Fn<(i32,)>` is not implemented for `Rc<dyn Fn(i32) -> i32>`**.
-//! * Not possible to pass the closure as a point-free value, we have to write another closure which does nothing but call this closure.
-//! * Not a big deal, just an undesired compilation error.
+//! * Not possible to pass the closure as a point-free value.
+//! * We sadly write another closure which does nothing but call this closure.
+//! * Not a big deal, but makes you ask why.
 //!
 //!
 //! ### A.2. Lifetimes!
@@ -152,7 +153,7 @@
 //!
 //! #### Simplest Closure to Return a Reference
 //!
-//! ... would be the one that returns a reference to the captured value. This might not look particularly useful but it is sufficient to demonstrate the problem.
+//! ... would be the one that returns a reference to the captured value. This might not look particularly useful but it actually is useful to demonstrate the problem.
 //!
 //! ```rust ignore
 //! let x = 42;
@@ -211,6 +212,15 @@
 //! | `ClosureOptRef<Capture, In, Out>` | `Capture` | `fn(&Capture, In) -> Option<&Out>` | `Fn(In) -> Option<&Out>` |
 //! | `ClosureResRef<Capture, In, Out, Error>` | `Capture` | `fn(&Capture, In) -> Result<&Out, Error>` | `Fn(In) -> Result<&Out, Error>` |
 //!
+//! It is straightforward to decide which closure variant to use:
+//!
+//! * If we capture the data by reference, `Capture(&data)`, we can use `Closure` for any return type.
+//! * If we return a value that does not have a lifetime related to the closure, we can again use `Closure` independent of how we captured the data.
+//! * However, if we capture the data with its ownership, `Capture(data)`, and want to return a value lifetime of which depends on the lifetime of the closure:
+//!   * we use `ClosureRef` if we want to return `&Out`,
+//!   * we use `ClosureOptRef` if we want to return `Option<&Out>`,
+//!   * we use `ClosureResRef` if we want to return `Result<&Out, _>`.
+//!
 //! *Hoping we eventually need only `Closure`.*
 //!
 //! ### A.3. Lifetimes when Captured by Ref
@@ -235,11 +245,13 @@
 //!
 //! ## B. Abstraction over the Captured Data
 //!
-//! As mentioned before, using `dyn Fn(In) -> Out` trait object as closures has drawbacks of having to allocate and losing certain compiler optimization opportunities. However, it also provides the flexibility by allowing to forget about the captured data. This is actually one of the great things about closures, and hence, a requirement.
+//! As mentioned before, using `dyn Fn(In) -> Out` trait object as closures has drawbacks of having to allocate and losing certain compiler optimization opportunities. However, it also provides the flexibility by allowing to forget the captured data. This is actually one of the main reasons why closures are so useful.
 //!
 //! On the other hand, `Closure` has to know the captured data, which is a big limitation.
 //!
-//! We can improve the situation to a certain extent by sum types. If the the closure will capture one of several possible types, then the closure could still be sized as an enum. However, we need to know all that can be used. This is not quiet the super power that `dyn Fn` has but covers a certain class of cases.
+//! We can improve the situation to a certain extent by sum types as follows.
+//!
+//! If the the closure will capture one of several possible types, then the closure could still be sized as an enum. However, we need to know all that can be used. This is not quiet the super power that `dyn Fn` has but covers a certain class of cases.
 //!
 //! ### A Practical Example
 //!
@@ -316,7 +328,7 @@
 //! * `ClosureOneOf3<C1, C2, C3, In, Out>` is a long type; hopefully, we only type it once.
 //! * `Closure::into_oneof3_var1`, ``Closure::into_oneof3_var2``, etc. are type-safe and explicit functions, but not pretty.
 //!
-//! To sum up, once the ugliness is hidden in a small area, `Closur` provides a convenient third option between the two extemes:
+//! To sum up, once the ugliness is hidden in a small box, `Closure` provides a convenient third option between the two extemes:
 //!
 //! * having the closure as a generic parameter allowing monomorphization but adding a generic parameter to the parent, and
 //! * having the closure as a `dyn Fn` trait object adding the indirection but not requiring the generic parameter.
@@ -325,9 +337,9 @@
 //!
 //! ## C. Relation with `Fn` trait
 //!
-//! Note that `Closure<Capture, In, Out>` has the method `fn call(&self, input: In) -> Out`. Therefore, it could have implemented `Fn(In) -> Out`. But the compiler tells me that *manual implementations of `Fn` are experimental*, and adds the error *use of unstable library feature 'fn_traits'*. Not wanting to be unstable, `Clsoure` does not implement the `Fn` trait.
+//! Note that `Closure<Capture, In, Out>` has the method `fn call(&self, input: In) -> Out`. Therefore, it could have implemented `Fn(In) -> Out`. But the compiler tells me that *manual implementations of `Fn` are experimental*, and adds the *use of unstable library feature 'fn_traits'* error. Not wanting to be unstable, `Closure` does not implement the `Fn` trait.
 //!
-//! Instead, `Closure` and all relevant types have the `as_fn` method such as `fn as_fn(&self) -> impl Fn(In) -> Out + '_ ` which gives us the compiler generated closure implementing the `Fn` trait.
+//! Instead, `Closure` and all variants have the `as_fn` method, such as `fn as_fn(&self) -> impl Fn(In) -> Out + '_ `, which gives us the compiler generated closure implementing the `Fn` trait.
 //!
 //! ## License
 //!
