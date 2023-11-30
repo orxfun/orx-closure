@@ -1,0 +1,20 @@
+[package]
+name = "orx-closure"
+version = "0.0.1"
+edition = "2021"
+authors = ["orxfun <orx.ugur.arikan@gmail.com>"]
+description = "An explicit closure with absolute seperation of the captured data from the function."
+license = "MIT"
+repository = "https://github.com/orxfun/orx-closure/"
+keywords = ["priority", "queue", "heap", "dary", "binary"]
+categories = ["rust-patterns", "data-structures"]
+
+
+[dependencies]
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "unified_indexed_access"
+harness = false
