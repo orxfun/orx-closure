@@ -153,6 +153,7 @@ impl<C1, C2, In, Out: ?Sized, Error> ClosureResRefOneOf2<C1, C2, In, Out, Error>
     }
 
     /// Returns a reference to the captured data.
+    #[inline(always)]
     pub fn captured_data(&self) -> OneOf2<&C1, &C2> {
         match &self.closure {
             OneOf2::Variant1(x) => OneOf2::Variant1(x.captured_data()),

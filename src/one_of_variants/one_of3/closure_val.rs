@@ -130,6 +130,7 @@ impl<C1, C2, C3, In, Out> ClosureOneOf3<C1, C2, C3, In, Out> {
     }
 
     /// Returns a reference to the captured data.
+    #[inline(always)]
     pub fn captured_data(&self) -> OneOf3<&C1, &C2, &C3> {
         match &self.closure {
             OneOf3::Variant1(x) => OneOf3::Variant1(x.captured_data()),

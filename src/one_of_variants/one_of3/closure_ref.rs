@@ -205,6 +205,7 @@ impl<C1, C2, C3, In, Out: ?Sized> ClosureRefOneOf3<C1, C2, C3, In, Out> {
     ///
     /// assert_eq!(data, OneOf2::Variant1(cats));
     /// ```
+    #[inline(always)]
     pub fn into_captured_data(self) -> OneOf3<C1, C2, C3> {
         match self.closure {
             OneOf3::Variant1(fun) => OneOf3::Variant1(fun.into_captured_data()),

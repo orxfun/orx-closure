@@ -77,6 +77,7 @@ impl<Capture, In, Out: ?Sized, Error> ClosureResRef<Capture, In, Out, Error> {
     }
 
     /// Returns a reference to the captured data.
+    #[inline(always)]
     pub fn captured_data(&self) -> &Capture {
         &self.capture
     }

@@ -172,6 +172,7 @@ impl<C1, C2, In, Out> ClosureOneOf2<C1, C2, In, Out> {
     /// let data = from_allowed.0.into_captured_data();
     /// assert!(matches!(data, OneOf2::Variant2(allowed)));
     /// ```
+    #[inline(always)]
     pub fn into_captured_data(self) -> OneOf2<C1, C2> {
         match self.closure {
             OneOf2::Variant1(fun) => OneOf2::Variant1(fun.into_captured_data()),

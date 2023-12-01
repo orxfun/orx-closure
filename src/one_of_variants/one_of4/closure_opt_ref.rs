@@ -154,6 +154,7 @@ impl<C1, C2, C3, C4, In, Out: ?Sized> ClosureOptRefOneOf4<C1, C2, C3, C4, In, Ou
     }
 
     /// Returns a reference to the captured data.
+    #[inline(always)]
     pub fn captured_data(&self) -> OneOf4<&C1, &C2, &C3, &C4> {
         match &self.closure {
             OneOf4::Variant1(x) => OneOf4::Variant1(x.captured_data()),
