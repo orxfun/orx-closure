@@ -1,3 +1,4 @@
+use crate::fun::FunOptRef;
 use std::fmt::Debug;
 
 /// Closure strictly separating the captured data from the function, and hence, having two components:
@@ -69,6 +70,11 @@ impl<Capture, In, Out: ?Sized> ClosureOptRef<Capture, In, Out> {
         (self.fun)(&self.capture, input)
     }
 
+    /// Returns a reference to the captured data.
+    pub fn captured_data(&self) -> &Capture {
+        &self.capture
+    }
+
     /// Consumes the closure and returns back the captured data.
     ///
     /// # Example
@@ -112,5 +118,11 @@ impl<Capture, In, Out: ?Sized> ClosureOptRef<Capture, In, Out> {
     /// ```
     pub fn as_fn<'a>(&'a self) -> impl Fn(In) -> Option<&'a Out> {
         move |x| self.call(x)
+    }
+}
+
+impl<Capture, In, Out: ?Sized> FunOptRef<In, Out> for ClosureOptRef<Capture, In, Out> {
+    fn call(&self, input: In) -> Option<&Out> {
+        ClosureOptRef::call(self, input)
     }
 }

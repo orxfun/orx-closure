@@ -1,4 +1,4 @@
-use crate::{ClosureRef, OneOf3};
+use crate::{fun::FunRef, ClosureRef, OneOf3};
 
 type UnionClosures<C1, C2, C3, In, Out> =
     OneOf3<ClosureRef<C1, In, Out>, ClosureRef<C2, In, Out>, ClosureRef<C3, In, Out>>;
@@ -141,6 +141,15 @@ impl<C1, C2, C3, In, Out: ?Sized> ClosureRefOneOf3<C1, C2, C3, In, Out> {
             OneOf3::Variant1(fun) => fun.call(input),
             OneOf3::Variant2(fun) => fun.call(input),
             OneOf3::Variant3(fun) => fun.call(input),
+        }
+    }
+
+    /// Returns a reference to the captured data.
+    pub fn captured_data(&self) -> OneOf3<&C1, &C2, &C3> {
+        match &self.closure {
+            OneOf3::Variant1(x) => OneOf3::Variant1(x.captured_data()),
+            OneOf3::Variant2(x) => OneOf3::Variant2(x.captured_data()),
+            OneOf3::Variant3(x) => OneOf3::Variant3(x.captured_data()),
         }
     }
 
@@ -425,5 +434,11 @@ impl<Capture, In, Out: ?Sized> ClosureRef<Capture, In, Out> {
     pub fn into_oneof3_var3<Var1, Var2>(self) -> ClosureRefOneOf3<Var1, Var2, Capture, In, Out> {
         let closure = OneOf3::Variant3(self);
         ClosureRefOneOf3 { closure }
+    }
+}
+
+impl<C1, C2, C3, In, Out: ?Sized> FunRef<In, Out> for ClosureRefOneOf3<C1, C2, C3, In, Out> {
+    fn call(&self, input: In) -> &Out {
+        ClosureRefOneOf3::call(self, input)
     }
 }

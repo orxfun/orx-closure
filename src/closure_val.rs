@@ -1,5 +1,7 @@
 use std::fmt::Debug;
 
+use crate::fun::Fun;
+
 /// Closure strictly separating the captured data from the function, and hence, having two components:
 ///
 /// * `Capture` is any captured data,
@@ -62,6 +64,11 @@ impl<Capture, In, Out> Closure<Capture, In, Out> {
         (self.fun)(&self.capture, input)
     }
 
+    /// Returns a reference to the captured data.
+    pub fn captured_data(&self) -> &Capture {
+        &self.capture
+    }
+
     /// Consumes the closure and returns back the captured data.
     ///
     /// ```rust
@@ -106,5 +113,11 @@ impl<Capture, In, Out> Closure<Capture, In, Out> {
     /// ```
     pub fn as_fn(&self) -> impl Fn(In) -> Out + '_ {
         |x| self.call(x)
+    }
+}
+
+impl<Capture, In, Out> Fun<In, Out> for Closure<Capture, In, Out> {
+    fn call(&self, input: In) -> Out {
+        Closure::call(self, input)
     }
 }

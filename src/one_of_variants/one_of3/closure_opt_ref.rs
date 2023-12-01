@@ -1,4 +1,4 @@
-use crate::{ClosureOptRef, OneOf3};
+use crate::{fun::FunOptRef, ClosureOptRef, OneOf3};
 
 type UnionClosures<C1, C2, C3, In, Out> =
     OneOf3<ClosureOptRef<C1, In, Out>, ClosureOptRef<C2, In, Out>, ClosureOptRef<C3, In, Out>>;
@@ -87,10 +87,10 @@ type UnionClosures<C1, C2, C3, In, Out> =
 /// assert!(present_ideas.for_pet.call("tux").is_none());
 /// ```
 #[derive(Clone, Debug)]
-pub struct ClosureOptRefOneOf3<C1, C2, C3, In, Out> {
+pub struct ClosureOptRefOneOf3<C1, C2, C3, In, Out: ?Sized> {
     closure: UnionClosures<C1, C2, C3, In, Out>,
 }
-impl<C1, C2, C3, In, Out> ClosureOptRefOneOf3<C1, C2, C3, In, Out> {
+impl<C1, C2, C3, In, Out: ?Sized> ClosureOptRefOneOf3<C1, C2, C3, In, Out> {
     /// Calls the closure with the given `input`.
     ///
     /// *The example below illustrates the usage of the closure over two possible types of captures; however, ClosureOptRefOneOf3 is only a generalization of the below for three different capture types.*
@@ -144,6 +144,15 @@ impl<C1, C2, C3, In, Out> ClosureOptRefOneOf3<C1, C2, C3, In, Out> {
             OneOf3::Variant1(fun) => fun.call(input),
             OneOf3::Variant2(fun) => fun.call(input),
             OneOf3::Variant3(fun) => fun.call(input),
+        }
+    }
+
+    /// Returns a reference to the captured data.
+    pub fn captured_data(&self) -> OneOf3<&C1, &C2, &C3> {
+        match &self.closure {
+            OneOf3::Variant1(x) => OneOf3::Variant1(x.captured_data()),
+            OneOf3::Variant2(x) => OneOf3::Variant2(x.captured_data()),
+            OneOf3::Variant3(x) => OneOf3::Variant3(x.captured_data()),
         }
     }
 
@@ -269,7 +278,7 @@ impl<C1, C2, C3, In, Out> ClosureOptRefOneOf3<C1, C2, C3, In, Out> {
     }
 }
 
-impl<Capture, In, Out> ClosureOptRef<Capture, In, Out> {
+impl<Capture, In, Out: ?Sized> ClosureOptRef<Capture, In, Out> {
     /// Transforms `ClosureOptRef<C1, In, Out>` into the more general `ClosureRefOneOf3<C1, C2, C3, In, Out>` for any `C2` and `C3`.
     ///
     /// # Example
@@ -433,5 +442,11 @@ impl<Capture, In, Out> ClosureOptRef<Capture, In, Out> {
     pub fn into_oneof3_var3<Var1, Var2>(self) -> ClosureOptRefOneOf3<Var1, Var2, Capture, In, Out> {
         let closure = OneOf3::Variant3(self);
         ClosureOptRefOneOf3 { closure }
+    }
+}
+
+impl<C1, C2, C3, In, Out: ?Sized> FunOptRef<In, Out> for ClosureOptRefOneOf3<C1, C2, C3, In, Out> {
+    fn call(&self, input: In) -> Option<&Out> {
+        ClosureOptRefOneOf3::call(self, input)
     }
 }

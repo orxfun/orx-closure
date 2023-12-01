@@ -1,4 +1,4 @@
-use crate::{ClosureRef, OneOf2};
+use crate::{fun::FunRef, ClosureRef, OneOf2};
 
 /// `ClosureRefOneOf2<C1, C2, In, Out>` is a union of two closures:
 ///
@@ -132,6 +132,14 @@ impl<C1, C2, In, Out: ?Sized> ClosureRefOneOf2<C1, C2, In, Out> {
         match &self.closure {
             OneOf2::Variant1(fun) => fun.call(input),
             OneOf2::Variant2(fun) => fun.call(input),
+        }
+    }
+
+    /// Returns a reference to the captured data.
+    pub fn captured_data(&self) -> OneOf2<&C1, &C2> {
+        match &self.closure {
+            OneOf2::Variant1(x) => OneOf2::Variant1(x.captured_data()),
+            OneOf2::Variant2(x) => OneOf2::Variant2(x.captured_data()),
         }
     }
 
@@ -350,5 +358,11 @@ impl<Capture, In, Out: ?Sized> ClosureRef<Capture, In, Out> {
     pub fn into_oneof2_var2<Var1>(self) -> ClosureRefOneOf2<Var1, Capture, In, Out> {
         let closure = OneOf2::Variant2(self);
         ClosureRefOneOf2 { closure }
+    }
+}
+
+impl<C1, C2, In, Out: ?Sized> FunRef<In, Out> for ClosureRefOneOf2<C1, C2, In, Out> {
+    fn call(&self, input: In) -> &Out {
+        ClosureRefOneOf2::call(self, input)
     }
 }
