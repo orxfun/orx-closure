@@ -1,3 +1,4 @@
+use crate::fun::FunResRef;
 use std::fmt::Debug;
 
 /// Closure strictly separating the captured data from the function, and hence, having two components:
@@ -75,6 +76,11 @@ impl<Capture, In, Out: ?Sized, Error> ClosureResRef<Capture, In, Out, Error> {
         (self.fun)(&self.capture, input)
     }
 
+    /// Returns a reference to the captured data.
+    pub fn captured_data(&self) -> &Capture {
+        &self.capture
+    }
+
     /// Consumes the closure and returns back the captured data.
     ///
     /// ```rust
@@ -119,5 +125,13 @@ impl<Capture, In, Out: ?Sized, Error> ClosureResRef<Capture, In, Out, Error> {
     /// ```
     pub fn as_fn<'a>(&'a self) -> impl Fn(In) -> Result<&'a Out, Error> {
         move |x| self.call(x)
+    }
+}
+
+impl<Capture, In, Out: ?Sized, Error> FunResRef<In, Out, Error>
+    for ClosureResRef<Capture, In, Out, Error>
+{
+    fn call(&self, input: In) -> Result<&Out, Error> {
+        ClosureResRef::call(self, input)
     }
 }

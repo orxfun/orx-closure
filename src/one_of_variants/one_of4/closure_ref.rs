@@ -1,4 +1,4 @@
-use crate::{ClosureRef, OneOf4};
+use crate::{fun::FunRef, ClosureRef, OneOf4};
 
 type UnionClosures<C1, C2, C3, C4, In, Out> = OneOf4<
     ClosureRef<C1, In, Out>,
@@ -91,10 +91,10 @@ type UnionClosures<C1, C2, C3, C4, In, Out> = OneOf4<
 /// assert!(present_ideas.for_pet.call("tux").is_empty());
 /// ```
 #[derive(Clone, Debug)]
-pub struct ClosureRefOneOf4<C1, C2, C3, C4, In, Out> {
+pub struct ClosureRefOneOf4<C1, C2, C3, C4, In, Out: ?Sized> {
     closure: UnionClosures<C1, C2, C3, C4, In, Out>,
 }
-impl<C1, C2, C3, C4, In, Out> ClosureRefOneOf4<C1, C2, C3, C4, In, Out> {
+impl<C1, C2, C3, C4, In, Out: ?Sized> ClosureRefOneOf4<C1, C2, C3, C4, In, Out> {
     /// Calls the closure with the given `input`.
     ///
     /// # Example
@@ -147,6 +147,16 @@ impl<C1, C2, C3, C4, In, Out> ClosureRefOneOf4<C1, C2, C3, C4, In, Out> {
             OneOf4::Variant2(fun) => fun.call(input),
             OneOf4::Variant3(fun) => fun.call(input),
             OneOf4::Variant4(fun) => fun.call(input),
+        }
+    }
+
+    /// Returns a reference to the captured data.
+    pub fn captured_data(&self) -> OneOf4<&C1, &C2, &C3, &C4> {
+        match &self.closure {
+            OneOf4::Variant1(x) => OneOf4::Variant1(x.captured_data()),
+            OneOf4::Variant2(x) => OneOf4::Variant2(x.captured_data()),
+            OneOf4::Variant3(x) => OneOf4::Variant3(x.captured_data()),
+            OneOf4::Variant4(x) => OneOf4::Variant4(x.captured_data()),
         }
     }
 
@@ -268,7 +278,7 @@ impl<C1, C2, C3, C4, In, Out> ClosureRefOneOf4<C1, C2, C3, C4, In, Out> {
     }
 }
 
-impl<Capture, In, Out> ClosureRef<Capture, In, Out> {
+impl<Capture, In, Out: ?Sized> ClosureRef<Capture, In, Out> {
     /// Transforms `ClosureRef<C1, In, Out>` into the more general `ClosureRefOneOf4<C1, C2, C3, C4, In, Out>` for any `C2`, `C3` and `C4`.
     ///
     /// # Example
@@ -497,5 +507,13 @@ impl<Capture, In, Out> ClosureRef<Capture, In, Out> {
     ) -> ClosureRefOneOf4<Var1, Var2, Var3, Capture, In, Out> {
         let closure = OneOf4::Variant4(self);
         ClosureRefOneOf4 { closure }
+    }
+}
+
+impl<C1, C2, C3, C4, In, Out: ?Sized> FunRef<In, Out>
+    for ClosureRefOneOf4<C1, C2, C3, C4, In, Out>
+{
+    fn call(&self, input: In) -> &Out {
+        ClosureRefOneOf4::call(self, input)
     }
 }

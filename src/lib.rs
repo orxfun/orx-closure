@@ -335,7 +335,39 @@
 //!
 //! This middle ground fits well with closures having specific functionalities such as the `Precedence`.
 //!
-//! ## C. Relation with `Fn` trait
+//! ## C. Abstraction over the Captured Data with Trait Objects
+//!
+//! As mentioned, we are not able to implement `fn_traits` in stable rust. As also mentioned, abstraction over the captured data type is the core power of closures. In order to achieve this flexibility, this crate provides the required traits `Fun`, `FunRef`, `FunOptRef` and `FunResRef`. The following table provides the complete list of traits and types implementing them.
+//!
+//! | Trait                       | Transformation              | Struct                                                |
+//! |-----------------------------|-----------------------------|-------------------------------------------------------|
+//! | `Fun<In, Out>`              | `In -> Out`                 | `T where T: Fn(In) -> Out`                            |
+//! |                             |                             | `Closure<Capture, In, Out>`                           |
+//! |                             |                             | `ClosureOneOf2<C1, C2, In, Out>`                      |
+//! |                             |                             | `ClosureOneOf3<C1, C2, C3, In, Out>`                  |
+//! |                             |                             | `ClosureOneOf4<C1, C2, C3, C4, In, Out>`              |
+//! | `FunRef<In, Out>`           | `In -> &Out`                | `ClosureRef<Capture, In, Out>`                        |
+//! |                             |                             | `ClosureRefOneOf2<C1, C2, In, Out>`                   |
+//! |                             |                             | `ClosureRefOneOf3<C1, C2, C3, In, Out>`               |
+//! |                             |                             | `ClosureRefOneOf4<C1, C2, C3, C4, In, Out>`           |
+//! | `FunOptRef<In, Out>`        | `In -> Option<&Out>`        | `ClosureOptRef<Capture, In, Out>`                     |
+//! |                             |                             | `ClosureOptRefOneOf2<C1, C2, In, Out>`                |
+//! |                             |                             | `ClosureOptRefOneOf3<C1, C2, C3, In, Out>`            |
+//! |                             |                             | `ClosureOptRefOneOf4<C1, C2, C3, C4, In, Out>`        |
+//! | `FunResRef<In, Out, Error>` | `In -> Result<&Out, Error>` | `ClosureResRef<Capture, In, Out, Error>`              |
+//! |                             |                             | `ClosureResRefOneOf2<C1, C2, In, Out, Error>`         |
+//! |                             |                             | `ClosureResRefOneOf3<C1, C2, C3, In, Out, Error>`     |
+//! |                             |                             | `ClosureResRefOneOf4<C1, C2, C3, C4, In, Out, Error>` |
+//!
+//! The fun traits are useful due to the following:
+//!
+//! * The are to be used as a generic parameter which can be filled up by any of the implementing types. This is exactly the purpose of the `Fn` traits. The two reasons why we don't directly use the `Fn` trait is as follows:
+//!   * We are not allowed to implement `Fn` trait in stable rust for the `Capture` types defined in this crate.
+//!   * Apart from `Fun`, we are not able to represent the reference-returning traits with the `Fn` trait due to lifetime errors.
+//! * They allow to create trait objects from the closures, such as `dyn Fun<In, Out>`, etc., whenever we do not (want to) know the capture type.
+//!
+//!
+//! ## D. Relation with `Fn` trait
 //!
 //! Note that `Closure<Capture, In, Out>` has the method `fn call(&self, input: In) -> Out`. Therefore, it could have implemented `Fn(In) -> Out`. But the compiler tells me that *manual implementations of `Fn` are experimental*, and adds the *use of unstable library feature 'fn_traits'* error. Not wanting to be unstable, `Closure` does not implement the `Fn` trait.
 //!
@@ -362,6 +394,7 @@ mod closure_opt_ref;
 mod closure_ref;
 mod closure_res_ref;
 mod closure_val;
+mod fun;
 mod one_of;
 mod one_of_variants;
 
@@ -386,3 +419,5 @@ pub use one_of_variants::one_of4::{
     closure_opt_ref::ClosureOptRefOneOf4, closure_ref::ClosureRefOneOf4,
     closure_res_ref::ClosureResRefOneOf4, closure_val::ClosureOneOf4,
 };
+
+pub use fun::{Fun, FunOptRef, FunRef, FunResRef};
