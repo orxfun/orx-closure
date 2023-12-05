@@ -1,6 +1,5 @@
-use std::fmt::Debug;
-
 use crate::fun::Fun;
+use std::fmt::Debug;
 
 /// Closure strictly separating the captured data from the function, and hence, having two components:
 ///
@@ -113,7 +112,7 @@ impl<Capture, In, Out> Closure<Capture, In, Out> {
     /// assert_eq!(1, module_fn(7));
     /// ```
     pub fn as_fn(&self) -> impl Fn(In) -> Out + '_ {
-        |x| self.call(x)
+        |x| (self.fun)(&self.capture, x)
     }
 }
 
