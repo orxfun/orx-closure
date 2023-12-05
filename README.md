@@ -52,7 +52,7 @@ Let's break the closure to its components:
 
 *The choice on the `&Capture` is intentional due to `Fn` being absolute favorite among `Fn`, `FnOnce` and `FnMut`. In other words, we want to be able to call the closure many times and we don't want to mutate. If we want to consume, we can simply capture by value; recall that the data and `fn` are separated.* 
 
-If we consider the closure as the sum of these two components; or simply as the pair `(Capture, fn(&Capture, In) -> Out)`; it is clear that both if-else branches have the same type `(i32, fn(&i32, i32) -> i32)`, there is no reason to treat them as different types.
+If we consider the closure as the product of these two components; or simply as the pair `(Capture, fn(&Capture, In) -> Out)`; it is clear that both if-else branches have the same type `(i32, fn(&i32, i32) -> i32)`, there is no reason to treat them as different types.
 
 This is exactly what the `Closure<Capture, In, Out>` struct does: it separates the captured data from the function pointer. Then, these functions become two different values of the same type, and hence, the following is valid.
 
@@ -327,7 +327,7 @@ This middle ground fits well with closures having specific functionalities such 
 
 ## C. Abstraction over the Captured Data with Trait Objects
 
-As mentioned, we are not able to implement `fn_traits` in stable rust. As also mentioned, abstraction over the captured data type is the core power of closures. In order to achieve this flexibility, this crate provides the required traits `Fun`, `FunRef`, `FunOptRef` and `FunResRef`. The following table provides the complete list of traits and types implementing them.
+We are not able to implement `fn_traits` in stable rust; however as discussed, abstraction over the captured data type is the core power of closures. In order to achieve this flexibility, this crate provides the required traits `Fun`, `FunRef`, `FunOptRef` and `FunResRef`. The following table provides the complete list of traits and types implementing them.
 
 | Trait                       | Transformation              | Struct                                                |
 |-----------------------------|-----------------------------|-------------------------------------------------------|
@@ -362,6 +362,70 @@ The fun traits are useful due to the following:
 Note that `Closure<Capture, In, Out>` has the method `fn call(&self, input: In) -> Out`. Therefore, it could have implemented `Fn(In) -> Out`. But the compiler tells me that *manual implementations of `Fn` are experimental*, and adds the *use of unstable library feature 'fn_traits'* error. Not wanting to be unstable, `Closure` does not implement the `Fn` trait.
 
 Instead, `Closure` and all variants have the `as_fn` method, such as `fn as_fn(&self) -> impl Fn(In) -> Out + '_ `, which gives us the compiler generated closure implementing the `Fn` trait.
+
+## E. Benchmarks & Performance
+
+Assume we have the requirement to hold a function as a field of a struct. In the example case defined in `/benches/fun_as_a_field`, we hold the function that accesses two-index access to a jagged array.
+
+The variants look like below:
+
+```rust
+use orx_closure::*;
+
+type WithClosure = Closure<Vec<Vec<Weight>>, (usize, usize), Weight>; // no generics required
+
+struct HoldingFn<F: Fn((usize, usize)) -> Weight> { // requires the generic parameter F
+    fun: F,
+}
+
+struct HoldingBoxDynFn { // no generics required
+    fun: Box<dyn Fn((usize, usize)) -> Weight>,
+}
+```
+
+And the results are as follows:
+
+```
+FunAsAField/closure/10000
+                        time:   [126.07 ms 126.63 ms 127.23 ms]
+FunAsAField/holding_fn/10000
+                        time:   [55.149 ms 55.372 ms 55.604 ms]
+FunAsAField/holding_box_dyn_fn/10000
+                        time:   [127.27 ms 128.24 ms 129.40 ms]
+```
+
+As expected, holding the closure as a generic field implementing the `Fn` performs the best. The generic parameter allows for monomorphization and compiler optimizations. However, not any two instances of the `HoldingFn` struct will have the same type.
+
+`Closure` and `Box<dyn Fn ...>` approaches perform equivalently, which is slightly slower than twice the generic version. This shows us that neither of them can benefit from certain inlining optimizations. It is due to the fact that we can have different versions/implementations of a function only if it has generic parameters. On the other hand, with `Closure`, we treat closures as different values of the same type without the need for a generic parameter. Then, the implementation of the function to which we pass the closure is the general one which calls the closure through the function pointer, without any opportunity to inline.
+
+From another perspective, it is actually surprising that `Closure` and `Box<dyn Fn ...>` are only ~two times slower than probably completely inlined version of a very small function which does nothing but `data[i][j]` where `data: Vec<Vec<i32>>`.
+
+Nevertheless, to sum up:
+
+* in performance-critical cases we would prefer to use the generic parameter & `impl Fn` approach to get the best performance;
+* however, we can prefer  `Box<dyn Fn ...>` or `Closure` approaches when the job done by the closure is large enough to make the indirection insignificant:
+  * for instance, the indirection will be significant if all the closure does is to allow access to data as we saw in the benchmark,
+  * however, will most certainly be insignificant if it performs matrix multiplication.
+
+## F. Final Remarks
+
+The benchmark above sort of settles down the use cases:
+
+* When we are okay to add the generic parameter and when we are not returning a reference to the captured data, `impl Fn` is the most performant option and does not require heap allocation.
+* Otherwise:
+  * `Box<dyn Fn ...>`:
+    * does not require a generic parameter,
+    * is as flexible as it could be in abstraction over the captured data by completely hiding it,
+    * however, requires heap allocation,
+    * we experience lifetime issues when returning a reference to the captured data.
+  * `Closure`
+    * does not require a generic parameter,
+    * has to remember the captured data type: it allows abstraction over the captured data to some extent; however, not so nicely and magically as `Fn` traits do,
+    * does not require heap allocation,
+    * auto-implements `Clone` provided that the captured data implements `Clone`,
+    * solves a useful set of lifetime issues that we cannot solve with `Fn` traits.
+
+*Note: This crate has been an experiment of a very simple idea, which helped me understand the underlying magic as well as current limitations of rust closures much better. Probably there is still a lot more to figure out. Nevertheless, it ended up with the `Closure` struct which is what I needed for another problem (actually, it was why I started playing around at the first place). In brief, issues, comments, corrections, suggestions, interesting ideas to experiment are all very welcome.*
 
 ## License
 
