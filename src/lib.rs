@@ -382,6 +382,7 @@
 //! ```rust
 //! use orx_closure::*;
 //!
+//! type Weight = i32;
 //! type WithClosure = Closure<Vec<Vec<Weight>>, (usize, usize), Weight>; // no generics required
 //!
 //! struct HoldingFn<F: Fn((usize, usize)) -> Weight> { // requires the generic parameter F
@@ -395,7 +396,7 @@
 //!
 //! And the results are as follows:
 //!
-//! ```
+//! ```ignore
 //! FunAsAField/closure/10000
 //!                         time:   [126.07 ms 126.63 ms 127.23 ms]
 //! FunAsAField/holding_fn/10000
