@@ -53,8 +53,7 @@ fn owning_field() {
         }
     }
 
-    let map =
-        HashMap::from_iter([(String::from("john"), 42), (String::from("doe"), 33)].into_iter());
+    let map = HashMap::from_iter([(String::from("john"), 42), (String::from("doe"), 33)]);
     let people = People {
         get_age: Capture(map).fun(|m, p| m.get(p).cloned().ok_or_else(|| String::from("who???"))),
     };
@@ -78,8 +77,7 @@ fn referencing_field() {
         }
     }
 
-    let map =
-        HashMap::from_iter([(String::from("john"), 42), (String::from("doe"), 33)].into_iter());
+    let map = HashMap::from_iter([(String::from("john"), 42), (String::from("doe"), 33)]);
     let people = People {
         get_age: Capture(&map).fun(|m, p| m.get(p).cloned().ok_or_else(|| String::from("who???"))),
     };
