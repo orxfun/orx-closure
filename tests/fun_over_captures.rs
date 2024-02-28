@@ -10,7 +10,7 @@ fn test_fun() {
     validate_fun(fun);
 
     let map: HashMap<usize, String, RandomState> =
-        HashMap::from_iter([(0usize, "john".to_string()), (1, "doe".to_string())].into_iter());
+        HashMap::from_iter([(0usize, "john".to_string()), (1, "doe".to_string())]);
     let fun = Capture(map).fun(|x, i: usize| x.get(&i).unwrap().clone());
     validate_fun(fun);
 }
@@ -29,7 +29,7 @@ fn test_funref() {
     validate_fun_ref(fun);
 
     let map: HashMap<usize, String, RandomState> =
-        HashMap::from_iter([(0usize, "john".to_string()), (1, "doe".to_string())].into_iter());
+        HashMap::from_iter([(0usize, "john".to_string()), (1, "doe".to_string())]);
     let fun = Capture(map).fun_ref(|x, i: usize| x.get(&i).unwrap().as_str());
     validate_fun_ref(fun);
 }
@@ -49,7 +49,7 @@ fn test_funoptref() {
     validate_fun_opt_ref(fun);
 
     let map: HashMap<usize, String, RandomState> =
-        HashMap::from_iter([(0usize, "john".to_string()), (1, "doe".to_string())].into_iter());
+        HashMap::from_iter([(0usize, "john".to_string()), (1, "doe".to_string())]);
     let fun = Capture(map).fun_option_ref(|x, i: usize| x.get(&i).map(|x| x.as_str()));
     validate_fun_opt_ref(fun);
 }
@@ -70,7 +70,7 @@ fn test_funresref() {
     validate_fun_res_ref(fun);
 
     let map: HashMap<usize, String, RandomState> =
-        HashMap::from_iter([(0usize, "john".to_string()), (1, "doe".to_string())].into_iter());
+        HashMap::from_iter([(0usize, "john".to_string()), (1, "doe".to_string())]);
     let fun = Capture(map).fun_result_ref(|x, i: usize| x.get(&i).map(|x| x.as_str()).ok_or(42));
     validate_fun_res_ref(fun);
 }

@@ -8,7 +8,7 @@ fn test_fun<F: Fn(char) -> usize>(fun: F) {
 }
 
 #[test]
-fn nocapture() {
+fn no_capture() {
     let fun = Capture(()).fun(|_: &(), c: char| match c {
         'a' => 1,
         'b' => 2,
@@ -20,7 +20,7 @@ fn nocapture() {
 
 #[test]
 fn capture_data() {
-    let map = HashMap::<char, usize>::from_iter([('a', 1), ('b', 2)].into_iter());
+    let map = HashMap::<char, usize>::from_iter([('a', 1), ('b', 2)]);
     let fun = Capture(map).fun(|map, c| *map.get(&c).unwrap_or(&42));
     test_fun(fun.as_fn());
     test_fun(|x| fun.call(x));
@@ -28,7 +28,7 @@ fn capture_data() {
 
 #[test]
 fn capture_ref() {
-    let map = HashMap::<char, usize>::from_iter([('a', 1), ('b', 2)].into_iter());
+    let map = HashMap::<char, usize>::from_iter([('a', 1), ('b', 2)]);
     let fun = Capture(&map).fun(|map, c| *map.get(&c).unwrap_or(&42));
     test_fun(fun.as_fn());
     test_fun(|x| fun.call(x));
@@ -36,13 +36,13 @@ fn capture_ref() {
 
 #[test]
 fn capture_deref() {
-    let map = HashMap::<char, usize>::from_iter([('a', 1), ('b', 2)].into_iter());
+    let map = HashMap::<char, usize>::from_iter([('a', 1), ('b', 2)]);
     let map = Rc::new(map);
     let fun = Capture(map.clone()).fun(|map, c| *map.get(&c).unwrap_or(&42));
     test_fun(fun.as_fn());
     test_fun(|x| fun.call(x));
 
-    let map = HashMap::<char, usize>::from_iter([('a', 1), ('b', 2)].into_iter());
+    let map = HashMap::<char, usize>::from_iter([('a', 1), ('b', 2)]);
     let map = Box::new(map);
     let fun = Capture(map).fun(|map, c| *map.get(&c).unwrap_or(&42));
     test_fun(fun.as_fn());

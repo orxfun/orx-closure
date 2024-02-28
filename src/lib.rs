@@ -1,6 +1,6 @@
 //! # orx_closure
 //!
-//! An explicit closure with absolute seperation of the captured data from the function.
+//! An explicit closure with absolute separation of the captured data from the function.
 //!
 //! ## Why
 //!
@@ -225,7 +225,7 @@
 //!
 //! ### A.3. Lifetimes when Captured by Ref
 //!
-//! The problems explained in **A.2**, leading us to implement four variants, are only relevant when we capture the data by value. The compiler allows us to represent all the abovementioned cases with the `Closure` signature:
+//! The problems explained in **A.2**, leading us to implement four variants, are only relevant when we capture the data by value. The compiler allows us to represent all the above-mentioned cases with the `Closure` signature:
 //!
 //! ```rust
 //! use orx_closure::*;
@@ -328,7 +328,7 @@
 //! * `ClosureOneOf3<C1, C2, C3, In, Out>` is a long type; hopefully, we only type it once.
 //! * `Closure::into_oneof3_var1`, ``Closure::into_oneof3_var2``, etc. are type-safe and explicit functions, but not pretty.
 //!
-//! To sum up, once the ugliness is hidden in a small box, `Closure` provides a convenient third option between the two extemes:
+//! To sum up, once the ugliness is hidden in a small box, `Closure` provides a convenient third option between the two extremes:
 //!
 //! * having the closure as a generic parameter allowing monomorphization but adding a generic parameter to the parent, and
 //! * having the closure as a `dyn Fn` trait object adding the indirection but not requiring the generic parameter.

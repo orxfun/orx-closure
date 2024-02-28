@@ -1,6 +1,6 @@
 [package]
 name = "orx-closure"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 authors = ["orxfun <orx.ugur.arikan@gmail.com>"]
 description = "An explicit closure with absolute seperation of the captured data from the function."
