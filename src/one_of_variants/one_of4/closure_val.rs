@@ -1,4 +1,4 @@
-use crate::{fun::Fun, Closure, OneOf4};
+use crate::{Closure, OneOf4, fun::Fun};
 
 type UnionClosures<C1, C2, C3, C4, In, Out> =
     OneOf4<Closure<C1, In, Out>, Closure<C2, In, Out>, Closure<C3, In, Out>, Closure<C4, In, Out>>;

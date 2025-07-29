@@ -1,4 +1,4 @@
-use crate::{fun::FunRef, ClosureRef, OneOf4};
+use crate::{ClosureRef, OneOf4, fun::FunRef};
 
 type UnionClosures<C1, C2, C3, C4, In, Out> = OneOf4<
     ClosureRef<C1, In, Out>,
