@@ -1,5 +1,5 @@
 use orx_closure::*;
-use std::collections::{hash_map::RandomState, HashMap};
+use std::collections::{HashMap, hash_map::RandomState};
 
 #[test]
 fn test_fun() {

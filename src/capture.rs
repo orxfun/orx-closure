@@ -1,4 +1,4 @@
-use crate::{closure_ref::ClosureRef, closure_val::Closure, ClosureOptRef, ClosureResRef};
+use crate::{ClosureOptRef, ClosureResRef, closure_ref::ClosureRef, closure_val::Closure};
 
 /// A utility wrapper which simply wraps around data to be captured and allows methods to define desired closures.
 ///

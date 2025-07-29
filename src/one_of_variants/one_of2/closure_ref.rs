@@ -1,4 +1,4 @@
-use crate::{fun::FunRef, ClosureRef, OneOf2};
+use crate::{ClosureRef, OneOf2, fun::FunRef};
 
 /// `ClosureRefOneOf2<C1, C2, In, Out>` is a union of two closures:
 ///
