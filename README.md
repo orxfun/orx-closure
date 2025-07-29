@@ -23,7 +23,7 @@ This causes problems in higher order functions; or simply when conditionally ass
 
 Consider the following issue [https://github.com/rust-lang/rust/issues/87961](https://github.com/rust-lang/rust/issues/87961). The issue suggests to clarify the error message, but also demonstrates how we are not able to write a very simple function.
 
-```rust
+```rust ignore
 fn returns_closure(hmm: bool, y: i32) -> impl Fn(i32) -> i32 {
     if hmm {
         move |x| x + y
@@ -71,12 +71,14 @@ let add_three = returns_closure(true, 3);
 assert_eq!(42, add_three.call(39));
 
 let times_two = returns_closure(false, 2);
-assert_eq!(42, times_two.call(21
+assert_eq!(42, times_two.call(21));
 ```
 
 Even the following is allowed :)
 
 ```rust
+use orx_closure::*;
+
 fn returns_closure(hmm: bool, y: i32) -> Closure<i32, i32, i32> {
     Capture(y).fun(if hmm { |y, x| x + y } else { |y, x| x * y })
 }
@@ -153,17 +155,17 @@ It is super easy to get the compiler angry with lifetimes when closures start re
 
 ... would be the one that returns a reference to the captured value. This might not look particularly useful but it actually is useful to demonstrate the problem.
 
-```rust
+```rust ignore
 let x = 42;
 let return_ref_to_capture = move || &x;
 // <- won't compile: ^^ returning this value requires that `'1` must outlive `'2`
 ```
 
-
-
 For different reasons, yet with the same error message, the following closure version won't compile either:
 
-```rust
+```rust ignore
+use orx_closure::*;
+
 let x = 42;
 let return_ref_to_capture = Capture(x).fun(|x: &i32, _: ()| x); // <- won't compile
 ```
@@ -173,6 +175,8 @@ Lifetimes and elisions are complicated to have a single signature `fn(&Capture, 
 Therefore, we need to have a different signature, and hence a different struct called `ClosureRef`, for which the function pointer is `fn(&Capture, In) -> &Out`. This immediately solves all the problems, the following nicely works:
 
 ```rust
+use orx_closure::*;
+
 let x = 42;
 let return_ref_to_capture = Capture(x).fun_ref(|x: &i32, _: ()| x); // all good :)
 ```
@@ -182,6 +186,8 @@ let return_ref_to_capture = Capture(x).fun_ref(|x: &i32, _: ()| x); // all good 
 We did solve the problem to return a reference by using `ClosureRef`. However, we often return `Option<&Out>`. The return type itself is not a reference but has a lifetime related with the lifetime of the closure. Therefore, we need something else. Namely, `ClosureOptRef` which has the function pointer signature of `fn(&Capture, In) -> Option<&Out>`. Once we switch to this signature, everything again works.
 
 ```rust
+use orx_closure::*;
+
 let x = 42;
 let return_ref_to_capture = Capture(x).fun_option_ref(|x: &i32, _: ()| Some(x)); // all good :)
 ```
@@ -189,6 +195,8 @@ let return_ref_to_capture = Capture(x).fun_option_ref(|x: &i32, _: ()| Some(x));
 We also frequently return `Result<&Out, Error>` and for this purpose we have `ClosureResRef`:
 
 ```rust
+use orx_closure::*;
+
 let x = 42;
 let return_ref_to_capture: ClosureResRef<i32, (), i32, String> = // <- String is the error type here.
     Capture(x).fun_result_ref(|x: &i32, _: ()| Ok(x));
@@ -220,6 +228,8 @@ It is straightforward to decide which closure variant to use:
 The problems explained in **A.2**, leading us to implement four variants, are only relevant when we capture the data by value. The compiler allows us to represent all the above-mentioned cases with the `Closure` signature:
 
 ```rust
+use orx_closure::*;
+
 let x = 42;
 
 let closure_ref = Capture(&x).fun(|x, _: ()| *x);
@@ -430,4 +440,4 @@ The benchmark above sort of settles down the use cases:
 
 ## License
 
-This library is licensed under MIT license. See LICENSE for details.
+Dual-licensed under [Apache 2.0](LICENSE-APACHE) or [MIT](LICENSE-MIT).
