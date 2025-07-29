@@ -1,9 +1,9 @@
 [package]
 name = "orx-closure"
-version = "0.1.4"
-edition = "2021"
+version = "0.2.0"
+edition = "2024"
 authors = ["orxfun <orx.ugur.arikan@gmail.com>"]
-description = "An explicit closure with absolute seperation of the captured data from the function."
+description = "An explicit closure with absolute separation of the captured data from the function."
 license = "MIT"
 repository = "https://github.com/orxfun/orx-closure/"
 keywords = ["closure", "fn", "fn_traits", "capture", "move"]
