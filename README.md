@@ -440,4 +440,4 @@ The benchmark above sort of settles down the use cases:
 
 ## License
 
-This library is licensed under MIT license. See LICENSE for details.
+Dual-licensed under [Apache 2.0](LICENSE-APACHE) or [MIT](LICENSE-MIT).
