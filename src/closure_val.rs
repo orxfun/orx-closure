@@ -1,5 +1,5 @@
 use crate::fun::Fun;
-use std::fmt::Debug;
+use core::fmt::Debug;
 
 /// Closure strictly separating the captured data from the function, and hence, having two components:
 ///
@@ -33,7 +33,7 @@ pub struct Closure<Capture, In, Out> {
 }
 
 impl<Capture: Debug, In, Out> Debug for Closure<Capture, In, Out> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("Closure")
             .field("capture", &self.capture)
             .finish()
@@ -120,4 +120,23 @@ impl<Capture, In, Out> Fun<In, Out> for Closure<Capture, In, Out> {
     fn call(&self, input: In) -> Out {
         Closure::call(self, input)
     }
+}
+
+#[test]
+fn abc() {
+    use crate::*;
+
+    fn returns_closure(hmm: bool, y: i32) -> Closure<i32, i32, i32> {
+        if hmm {
+            Capture(y).fun(|y, x| x + y)
+        } else {
+            Capture(y).fun(|y, x| x * y)
+        }
+    }
+    let add_three = returns_closure(true, 3);
+    assert_eq!(42, add_three.call(39));
+
+    let times_two = returns_closure(false, 2);
+    assert_eq!(42, times_two.call(21));
+    // assert_eq!(42, times_two.call(21
 }

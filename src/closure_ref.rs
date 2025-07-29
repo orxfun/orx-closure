@@ -1,5 +1,5 @@
 use crate::fun::FunRef;
-use std::fmt::Debug;
+use core::fmt::Debug;
 
 /// Closure strictly separating the captured data from the function, and hence, having two components:
 ///
@@ -36,7 +36,7 @@ pub struct ClosureRef<Capture, In, Out: ?Sized> {
 }
 
 impl<Capture: Debug, In, Out: ?Sized> Debug for ClosureRef<Capture, In, Out> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("ClosureRef")
             .field("capture", &self.capture)
             .finish()

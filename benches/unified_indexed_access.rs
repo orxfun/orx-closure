@@ -1,4 +1,4 @@
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use orx_closure::*;
 use std::{collections::HashMap, fmt::Display, rc::Rc};
 
@@ -15,7 +15,7 @@ type Closure4 = ClosureOneOf4<Jagged, Map, Flat, AlwaysOne, Edge, i32>;
 
 struct Treatment(DataVariant, usize);
 impl Display for Treatment {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{:?}({})", self.0, self.1)
     }
 }
